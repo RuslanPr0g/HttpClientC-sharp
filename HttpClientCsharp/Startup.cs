@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Polly;
 
 namespace HttpClientCsharp
 {
@@ -25,7 +26,13 @@ namespace HttpClientCsharp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHttpClient();
+            services.AddHttpClient("Bore", client =>
+            {
+                client.BaseAddress = new Uri("https://www.boredapi.com/api/");
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.DefaultRequestHeaders.Add("User-Agent", "BoreApplication");
+            }).AddTransientHttpErrorPolicy(p =>
+                p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(600)));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
